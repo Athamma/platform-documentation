@@ -144,6 +144,7 @@ Player is an object representation of the state of a player connected to the gam
 | `GetIKAnchors()` | `Array`<[`IKAnchor`](ikanchor.md)> | Returns an array of all IKAnchor objects activated on this player. | None |
 | `IsInPartyWith(Player)` | `boolean` | Returns whether both players are in the same public party. | None |
 | `GetPartyInfo()` | [`PartyInfo`](partyinfo.md) | If the player is in a party, returns a PartyInfo object with data about that party. | None |
+| `GetInventories()` | `Array`<[`Inventory`](inventory.md)> | Returns a list of Inventory objects assigned to the player. If the player has no assigned inventories, this list is empty. | None |
 
 ## Events
 
@@ -827,6 +828,40 @@ Task.Wait()
 ```
 
 See also: [CoreObject.GetCustomProperty](coreobject.md) | [Game.GetLocalPlayer](game.md) | [World.SpawnAsset](world.md) | [Vector3.New](vector3.md) | [Task.Wait](task.md) | [CoreLua.print](coreluafunctions.md)
+
+---
+
+Example using:
+
+### `GetInventories`
+
+In this example, we periodically check how many inventories each player has and print the result to the Event Log.
+
+```lua
+function Tick()
+    for _,player in ipairs(Game.GetPlayers()) do
+        local inventories = player:GetInventories()
+        local totalItems = 0
+        for _,inventory in ipairs(inventories) do
+            totalItems = totalItems + ComputeItemCount(inventory)
+        end
+        print(player.name.." has "..totalItems.." items across "..#inventories .." inventories.")
+    end
+    Task.Wait(3)
+end
+
+function ComputeItemCount(inventory)
+    if inventory.occupiedSlotCount == 0 then return 0 end
+    local total = 0
+    for i = 1, inventory.occupiedSlotCount do
+        local item = inventory:GetItem(i)
+        total = total + item.count
+    end
+    return total
+end
+```
+
+See also: [Inventory.occupiedSlotCount](inventory.md) | [InventoryItem.count](inventoryitem.md) | [Player.name](player.md) | [Game.GetPlayers](game.md)
 
 ---
 
