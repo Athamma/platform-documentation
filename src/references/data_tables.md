@@ -114,8 +114,7 @@ end
 
 ## Use Cases
 
-- Storing the player's collected resources they have harvested in the world.
 - Consumables that the player can purchase from a shop.
 - NPC Dialog entries.
-- Crating recipes.
+- Crafting recipes.
 - Loot tables with different rarities.

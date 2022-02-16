@@ -26,7 +26,7 @@ Inventory is a CoreObject that represents a container of InventoryItems. Items c
 | `Assign(Player player)` | `None` | Sets the owner property of the inventory to the specified player. When a networked inventory is assigned to a player, only that player's client will be able to access the inventory contents. | None |
 | `Unassign()` | `None` | Clears the owner property of the inventory. The given inventory will now be accessible to all clients. | None |
 | `GetItem(integer slot)` | [`InventoryItem`](inventoryitem.md) | Returns the contents of the specified slot. Returns `nil` if the slot is empty. | None |
-| `GetItems([table parameters])` | `Array`<[`InventoryItem`](inventoryitem.md)> | Returns a list of all items in the inventory. Returns an empty list if the inventory is empty. <br/>Supported parameters include: <br/>`itemAssetId (string)`: If specified, filters the results by the specified item asset reference. Useful for getting all inventory items of a specific type. | None |
+| `GetItems([table parameters])` | `table` | Returns a table mapping integer slot number to the inventory item in that slot. Note that this may leave gaps in the table if the inventory contains empty slots, so use with `ipairs()` is not recommended. Returns an empty table if the inventory is empty. <br/>Supported parameters include: <br/>`itemAssetId (string)`: If specified, filters the results by the specified item asset reference. Useful for getting all inventory items of a specific type. | None |
 | `ClearItems()` | `None` | Removes all items from the inventory. | None |
 | `SortItems()` | `None` | Reorganizes inventory items into sequential slots starting with slot 1. Does not perform any consolidation of item stacks of the same type. Use `ConsolidateItems()` first if this behavior is desired. | None |
 | `ConsolidateItems()` | `None` | Combines stacks of inventory items into as few slots as possible based on the `maximumStackCount` of each item. Slots may be emptied by this operation, but are otherwise not sorted or reorganized. | None |
@@ -61,6 +61,55 @@ Inventory is a CoreObject that represents a container of InventoryItems. Items c
 | `itemPropertyChangedEvent` | [`Event`](event.md)<[`Inventory`](inventory.md) inventory, [`InventoryItem`](inventoryitem.md) item, `string` propertyName> | Fired when an inventory item's dynamic custom property value has changed. | None |
 
 ## Examples
+
+Example using:
+
+### `itemPropertyChangedEvent`
+
+### `GetItems`
+
+In this example, a pair of server/client scripts are placed under an Inventory. If any of the inventory items has a dynamic custom property called "Freshness", then that item becomes less fresh over time, until the "Freshness" property reaches zero. The server script is responsible for changing the freshness, while the client script listens for the changes and prints them to the Event Log.
+
+```lua
+-- SERVER SCRIPT:
+local INVENTORY = script:FindAncestorByType("Inventory")
+local DECAY_PERIOD = 5
+
+function Tick()
+    Task.Wait(DECAY_PERIOD)
+
+    for _,item in pairs(INVENTORY:GetItems()) do
+        local value, hasProperty = item:GetCustomProperty("Freshness")
+        if hasProperty and value > 0 then
+            item:SetCustomProperty("Freshness", value - 1)
+        end
+    end
+end
+
+-- CLIENT SCRIPT:
+local INVENTORY = script:FindAncestorByType("Inventory")
+
+function OnPropertyChanged(inventory, item, propertyName)
+    local value = item:GetCustomProperty(propertyName)
+
+    print("Item ".. item.name ..":".. propertyName .." = ".. tostring(value))
+
+    if propertyName == "Freshness" then
+        if value == 1 then
+            print("One of your items is almost rotten!")
+
+        elseif value == 0 then
+            print(item.name .." is now rotten.")
+        end
+    end
+end
+
+INVENTORY.itemPropertyChangedEvent:Connect(OnPropertyChanged)
+```
+
+See also: [InventoryItem.SetCustomProperty](inventoryitem.md) | [CoreObject.FindAncestorByType](coreobject.md) | [Task.Wait](task.md)
+
+---
 
 Example using:
 
@@ -133,6 +182,30 @@ See also: [Player.GetInventories](player.md) | [Game.playerJoinedEvent](game.md)
 
 Example using:
 
+### `CanMoveFromSlot`
+
+### `MoveFromSlot`
+
+In games with more complex inventories players will want to reorganize their items. In this example, we implement a "Move" operation by using a server event with `Events.ConnectForPlayer()`. This allows a client UI script to react to input and call `Events.BroadcastToServer("MoveItemStack", fromSlot, toSlot)`.
+
+```lua
+function OnMove(player, fromSlot, toSlot)
+    local inventory = player:GetInventories()[1]
+
+    if inventory:CanMoveFromSlot(fromSlot, toSlot) then
+        inventory:MoveFromSlot(fromSlot, toSlot)
+    end
+end
+
+Events.ConnectForPlayer("MoveItemStack", OnMove)
+```
+
+See also: [Player.GetInventories](player.md) | [Events.ConnectForPlayer](events.md)
+
+---
+
+Example using:
+
 ### `CanPickUpItem`
 
 ### `PickUpItem`
@@ -169,6 +242,44 @@ See also: [Player.GetInventories](player.md) | [Trigger.beginOverlapEvent](trigg
 
 Example using:
 
+### `CanRemoveFromSlot`
+
+### `RemoveFromSlot`
+
+### `GetItem`
+
+Some games may want to offer a "Scrap" operation to players, which destroyes items in exchange for some resource. The type of resource is defined as a custom property. In this example we implement a Scrap operation by using a server event with `Events.ConnectForPlayer()`. This allows a client UI script to react to a button press and call `Events.BroadcastToServer("ScrapItem", slotNumber)`.
+
+```lua
+local RESOURCE_NAME = script:GetCustomProperty("ScrapResourceName")
+
+function Scrap(inventory, slotNumber)
+    if inventory:CanRemoveFromSlot(slotNumber) then
+        local item = inventory:GetItem(slotNumber)
+        local resourceGain = item.count
+
+        inventory:RemoveFromSlot(slotNumber)
+
+        return resourceGain
+    end
+    return 0
+end
+
+function OnScrapItem(player, slotNumber)
+    local inventory = player:GetInventories()[1]
+    local resourceGain = Scrap(inventory, slotNumber)
+    player:AddResource(RESOURCE_NAME, resourceGain)
+end
+
+Events.ConnectForPlayer("ScrapItem", OnScrapItem)
+```
+
+See also: [InventoryItem.count](inventoryitem.md) | [Player.AddResource](player.md) | [CoreObject.GetCustomProperty](coreobject.md) | [Events.ConnectForPlayer](events.md)
+
+---
+
+Example using:
+
 ### `ClearItems`
 
 In this example, when a player dies they lose all items that were in all of their inventories.
@@ -186,6 +297,33 @@ end)
 ```
 
 See also: [Player.GetInventories](player.md) | [Game.playerJoinedEvent](game.md)
+
+---
+
+Example using:
+
+### `ConsolidateItems`
+
+### `SortItems`
+
+Depending on the game it can be a good idea to offer a "Compact" operation to players, where the items in their inventory will sort to the top and different stacks of the same item will combine. In this example we implement a Compact operation by using a server event with `Events.ConnectForPlayer()`. This allows a client UI script to react to a button press and call `Events.BroadcastToServer("CompactInventories")`.
+
+```lua
+function Compact(inventory)
+    inventory:ConsolidateItems()
+    inventory:SortItems()
+end
+
+function OnCompactInventories(player)
+    for _,inventory in ipairs(player:GetInventories()) do
+        Compact(inventory)
+    end
+end
+
+Events.ConnectForPlayer("CompactInventories", OnCompactInventories)
+```
+
+See also: [Player.GetInventories](player.md) | [Events.ConnectForPlayer](events.md)
 
 ---
 
@@ -376,7 +514,7 @@ local INVENTORY_TEMPLATE = script:GetCustomProperty("Inventory")
 function SaveInventory(player, inventory)
     -- Serialize
     local inventoryData = {}
-    for i,item in ipairs(inventory:GetItems()) do
+    for i,item in pairs(inventory:GetItems()) do
         inventoryData[item.itemAssetId] = item.count
     end
     -- Save to storage
