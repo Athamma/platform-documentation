@@ -25,6 +25,9 @@ The VoiceChat namespace contains functions for controlling voice chat in a game.
 | `VoiceChat.MutePlayerInChannel(Player, string channelName)` | `none` | Mutes the given player in the specified channel. | Server-Only |
 | `VoiceChat.UnmutePlayerInChannel(Player, string channelName)` | `none` | Unmutes the given player in the specified channel. | Server-Only |
 | `VoiceChat.IsPlayerMutedInChannel(Player, string channelName)` | `boolean` | Returns `true` if the given player is muted in the specified channel, otherwise returns `false`. | None |
+| `VoiceChat.HasMicrophone(Player player)` | `boolean` | Returns `true` if Core has detected a microphone for the given player, otherwise returns `false`. | None |
+| `VoiceChat.IsVoiceChatEnabled(Player player)` | `boolean` | Returns `true` if the given player has enabled voice chat in their settings. | None |
+| `VoiceChat.GetVoiceChatMethod()` | [`VoiceChatMethod`](enums.md#voicechatmethod) | Returns the method the local player has selected in their settings to activate voice chat. | Client-Only |
 
 ## Examples
 
@@ -58,6 +61,53 @@ end)
 ```
 
 See also: [Game.playerJoinedEvent](game.md) | [Player.diedEvent](player.md)
+
+---
+
+Example using:
+
+### `HasMicrophone`
+
+### `IsVoiceChatEnabled`
+
+### `GetVoiceChatMethod`
+
+This client script demonstrates ways to detect the local player's access to voice chat. The results are print to screen and refreshed every 5 seconds. In case the player has their voice set to "Push-to-talk", the script figures out what key is bound to that action and provides it as information to the player.
+
+```lua
+local player = Game.GetLocalPlayer()
+
+function UpdateVoiceStatus()
+    local hasMic = VoiceChat.HasMicrophone(player)
+    local voiceEnabled = VoiceChat.IsVoiceChatEnabled(player)
+    local method = VoiceChat.GetVoiceChatMethod()
+    
+    UI.PrintToScreen("Has microphone: " .. tostring(hasMic))
+    UI.PrintToScreen("Voice enabled: " .. tostring(voiceEnabled))
+    UI.PrintToScreen("Voice method: " .. tostring(method))
+    UI.PrintToScreen("")
+    
+    if not hasMic then
+        UI.PrintToScreen("No microphone found")
+    
+    elseif not voiceEnabled then
+        UI.PrintToScreen("Voice chat is disabled. Enable it in settings.")
+        
+    elseif method == VoiceChatMethod.PUSH_TO_TALK then
+        local pttLabel = Input.GetActionInputLabel("PushToTalk")
+        UI.PrintToScreen("Push-to-talk: " .. pttLabel)
+    else
+        UI.PrintToScreen("Open microphone")
+    end
+end
+
+while true do
+    UpdateVoiceStatus()
+    Task.Wait(5)
+end
+```
+
+See also: [Input.GetActionInputLabel](input.md) | [UI.PrintToScreen](ui.md) | [Game.GetLocalPlayer](game.md) | [Task.Wait](task.md)
 
 ---
 

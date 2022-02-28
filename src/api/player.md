@@ -145,6 +145,7 @@ Player is an object representation of the state of a player connected to the gam
 | `IsInPartyWith(Player)` | `boolean` | Returns whether both players are in the same public party. | None |
 | `GetPartyInfo()` | [`PartyInfo`](partyinfo.md) | If the player is in a party, returns a PartyInfo object with data about that party. | None |
 | `GetInventories()` | `Array`<[`Inventory`](inventory.md)> | Returns a list of Inventory objects assigned to the player. If the player has no assigned inventories, this list is empty. | None |
+| `GetInteractableTarget()` | [`Trigger`](trigger.md) | If the player is currently focused on an interactable Trigger, returns that Trigger. Returns `nil` if the player is not currently focused on an interactable Trigger. | Client-Only |
 
 ## Events
 
@@ -164,6 +165,8 @@ Player is an object representation of the state of a player connected to the gam
 | `animationEvent` | [`Event`](event.md)<[`Player`](player.md) player, `string` eventName, `string` animationName> | Some animations have events specified at important points of the animation (for example the impact point in a punch animation). This event is fired with the Player that triggered it, the name of the event at those points, and the name of the animation itself. Events generated from default stances on the player will return "animation_stance" as the animation name. | Client-Only |
 | `privateNetworkedDataChangedEvent` | [`Event`](event.md)<[`Player`](player.md) player, `string` key> | Fired when the player's private data changes. On the client, only the local player's private data is available. | None |
 | `collidedEvent` | [`Event`](event.md)<[`Player`](player.md) player, [`HitResult`](hitresult.md) hitResult> | Fired when a player collides with another object. The `HitResult` parameter describes the collision that occurred. | None |
+| `interactableFocusedEvent` | [`Event`](event.md)<[`Player`](player.md) player, [`Trigger`](trigger.md) trigger> | Fired when a player has focused on an interactable Trigger and may interact with it. | Client-Only |
+| `interactableUnfocusedEvent` | [`Event`](event.md)<[`Player`](player.md) player, [`Trigger`](trigger.md) trigger> | Fired when a player is no longer focused on a previously focused interactable Trigger. | Client-Only |
 
 ## Hooks
 
@@ -349,6 +352,46 @@ end)
 ```
 
 See also: [Chat.BroadcastMessage](chat.md) | [Game.GetPlayers](game.md) | [Task.Wait](task.md) | [Object.IsValid](object.md)
+
+---
+
+Example using:
+
+### `interactableFocusedEvent`
+
+### `interactableUnfocusedEvent`
+
+Similar to the other example, we show a visual indicator on top of interactable object. This time, however, we make use of the player's `interactableFocusedEvent` and `interactableUnfocusedEvent` events. This gives us the exact moment the interaction focus begins/ends, which is used to hide/show the VFX.
+
+```lua
+local INDICATOR_VFX = script:GetCustomProperty("IndicatorVfx"):WaitForObject()
+local PLAYER = Game.GetLocalPlayer()
+
+INDICATOR_VFX.visibility = Visibility.FORCE_OFF
+    
+function OnInteractableFocused(player, trigger)
+    print("Focused: " .. trigger.interactionLabel)
+    
+    INDICATOR_VFX:SetWorldPosition(trigger:GetWorldPosition())
+    INDICATOR_VFX.visibility = Visibility.INHERIT
+    
+    if INDICATOR_VFX.Play then
+        -- If the indicator has a Play() function, call it
+        INDICATOR_VFX:Play()
+    end
+end
+
+function OnInteractableUnfocused(player, trigger)
+    print("Unfocused: " .. trigger.interactionLabel)
+    
+    INDICATOR_VFX.visibility = Visibility.FORCE_OFF
+end
+
+PLAYER.interactableFocusedEvent:Connect(OnInteractableFocused)
+PLAYER.interactableUnfocusedEvent:Connect(OnInteractableUnfocused)
+```
+
+See also: [Trigger.interactionLabel](trigger.md) | [Vfx.Play](vfx.md) | [Game.GetLocalPlayer](game.md) | [CoreObject.SetRotation](coreobject.md)
 
 ---
 
@@ -828,6 +871,35 @@ Task.Wait()
 ```
 
 See also: [CoreObject.GetCustomProperty](coreobject.md) | [Game.GetLocalPlayer](game.md) | [World.SpawnAsset](world.md) | [Vector3.New](vector3.md) | [Task.Wait](task.md) | [CoreLua.print](coreluafunctions.md)
+
+---
+
+Example using:
+
+### `GetInteractableTarget`
+
+In this example, a visual indicator appears on top of any object that has an interactable trigger. For example, a weapon that can be picked up. The indicator spins around its Z axis. This is a client script.
+
+```lua
+local INDICATOR_VFX = script:GetCustomProperty("IndicatorVfx"):WaitForObject()
+local PLAYER = Game.GetLocalPlayer()
+
+function Tick()
+    local trigger = PLAYER:GetInteractableTarget()
+    if trigger then
+        INDICATOR_VFX:SetWorldPosition(trigger:GetWorldPosition())
+        INDICATOR_VFX.visibility = Visibility.INHERIT
+        
+        local rot = INDICATOR_VFX:GetRotation()
+        rot.z = time() * 360
+        INDICATOR_VFX:SetRotation(rot)
+    else
+        INDICATOR_VFX.visibility = Visibility.FORCE_OFF
+    end
+end
+```
+
+See also: [Game.GetLocalPlayer](game.md) | [CoreObject.SetRotation](coreobject.md)
 
 ---
 

@@ -351,6 +351,13 @@ tags:
 | `VoiceChannelType.NORMAL` | `0` | A regular voice chat channel. Player volume is not affected by player position. |
 | `VoiceChannelType.POSITIONAL` | `1` | A positional voice chat channel. Player volume is affected by the speaker's position in relation to the listener. |
 
+## VoiceChatMethod
+
+| Enum Name | Value | Description |
+| --------- | ----------- | ----------- |
+| `VoiceChatMethod.PUSH_TO_TALK` | `0` | Player presses Push-to-Talk hotkey to speak in voice chat. |
+| `VoiceChatMethod.DETECT_SPEAKING` | `2` | Core detects when the player is speaking and automatically activates voice chat. |
+
 ## VoiceChatMode
 
 | Enum Name | Value | Description |
