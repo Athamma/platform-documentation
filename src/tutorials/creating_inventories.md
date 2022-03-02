@@ -51,7 +51,7 @@ You will need to create a few item assets which are project-level definitions of
 2. Give the item asset a name (this example will use `Health Potion`).
 3. In the **Properties** window, set the **Name** of the item asset to `Health Potion`.
 4. Set the **Maximum Stack Size** to `5`.
-5. Add a **Core Object Reference** called `Icon`, and select an icon to use for this item.
+5. Add an **Asset Reference** called `Icon`, and select an icon to use for this item.
 6. Repeat this process so you have a few item assets that can be used.
 
 ![!Create Item Assets](../img/Inventory/Tutorial/create_item_assets.png){: .center loading="lazy" }
@@ -110,7 +110,7 @@ Each player that joins the game will have a backpack with a size of 16 slots ass
 
 The UI for the player inventory has been created already, this can be customized and more slots can be added if you like. If more slots are created, remember to update the slot count for the backpack.
 
-1. In **Project Content** add the **Player Inventory** template to the **Hierarchy**.
+1. In **Core Content** search for `player inventory` to find the **Player Inventory** template, and add it to the **Hierarchy**.
 2. **Deinstance** the template.
 
 ![!Add Player Inventory](../img/Inventory/Tutorial/add_player_inventory.png){: .center loading="lazy" }
@@ -424,17 +424,24 @@ local function OnSlotPressedEvent(button, slot, slotIndex) -- (1)
 
         -- Slot contains existing item
         else
-            local tmpImg = icon:GetImage()
-            local tmpCount = count.text
+            local item = inventory:GetItem(activeSlotIndex)
+            local toItem = inventory:GetItem(slotIndex)
 
-            icon:SetImage(activeSlotIcon:GetImage())
-            count.text = activeSlotCount.text
-            activeSlotIcon:SetImage(tmpImg)
-            activeSlotCount.text = tmpCount
-            activeSlot.opacity = 1
+            if item ~= nil and toItem ~= nil and item.itemAssetId == toItem.itemAssetId and toItem.count == toItem.maximumStackCount then
+                activeSlot.opacity = 1
+            else
+                local tmpImg = icon:GetImage()
+                local tmpCount = count.text
 
-            tmpCount = nil
-            tmpImg = nil
+                icon:SetImage(activeSlotIcon:GetImage())
+                count.text = activeSlotCount.text
+                activeSlotIcon:SetImage(tmpImg)
+                activeSlotCount.text = tmpCount
+                activeSlot.opacity = 1
+
+                tmpCount = nil
+                tmpImg = nil
+            end
         end
 
         Events.BroadcastToServer("inventory.moveitem", activeSlotIndex, slotIndex) -- (3)
@@ -476,7 +483,7 @@ local function ConnectSlotEvents()
         local button = slot:FindChildByName("Button")
         local icon = slot:FindChildByName("Icon")
 
-        if(button ~= nil and icon ~= nil and button.isInteractable) then
+        if button ~= nil and icon ~= nil and button.isInteractable then
             button.pressedEvent:Connect(OnSlotPressedEvent, slot, index)
         end
     end
@@ -599,17 +606,24 @@ ConnectSlotEvents()
 
             -- Slot contains existing item
             else
-                local tmpImg = icon:GetImage()
-                local tmpCount = count.text
+                local item = inventory:GetItem(activeSlotIndex)
+                local toItem = inventory:GetItem(slotIndex)
 
-                icon:SetImage(activeSlotIcon:GetImage())
-                count.text = activeSlotCount.text
-                activeSlotIcon:SetImage(tmpImg)
-                activeSlotCount.text = tmpCount
-                activeSlot.opacity = 1
+                if item ~= nil and toItem ~= nil and item.itemAssetId == toItem.itemAssetId and toItem.count == toItem.maximumStackCount then
+                    activeSlot.opacity = 1
+                else
+                    local tmpImg = icon:GetImage()
+                    local tmpCount = count.text
 
-                tmpCount = nil
-                tmpImg = nil
+                    icon:SetImage(activeSlotIcon:GetImage())
+                    count.text = activeSlotCount.text
+                    activeSlotIcon:SetImage(tmpImg)
+                    activeSlotCount.text = tmpCount
+                    activeSlot.opacity = 1
+
+                    tmpCount = nil
+                    tmpImg = nil
+                end
             end
 
             Events.BroadcastToServer("inventory.moveitem", activeSlotIndex, slotIndex)
@@ -635,7 +649,7 @@ ConnectSlotEvents()
             local button = slot:FindChildByName("Button")
             local icon = slot:FindChildByName("Icon")
 
-            if(button ~= nil and icon ~= nil and button.isInteractable) then
+            if button ~= nil and icon ~= nil and button.isInteractable then
                 button.pressedEvent:Connect(OnSlotPressedEvent, slot, index)
             end
         end
@@ -1289,17 +1303,24 @@ function API.OnSlotPressedEvent(button, inventory, slot, slotIndex)
 
         -- Slot contains existing item
         else
-            local tmpImg = icon:GetImage()
-            local tmpCount = count.text
+            local item = inventory:GetItem(API.ACTIVE.slotIndex)
+            local toItem = inventory:GetItem(slotIndex)
 
-            icon:SetImage(API.ACTIVE.slotIcon:GetImage())
-            count.text = API.ACTIVE.slotCount.text
-            API.ACTIVE.slotIcon:SetImage(tmpImg)
-            API.ACTIVE.slotCount.text = tmpCount
-            API.ACTIVE.slot.opacity = 1
+            if item ~= nil and toItem ~= nil and item.itemAssetId == toItem.itemAssetId and toItem.count == toItem.maximumStackCount then
+                API.ACTIVE.slot.opacity = 1
+            else
+                local tmpImg = icon:GetImage()
+                local tmpCount = count.text
 
-            tmpCount = nil
-            tmpImg = nil
+                icon:SetImage(API.ACTIVE.slotIcon:GetImage())
+                count.text = API.ACTIVE.slotCount.text
+                API.ACTIVE.slotIcon:SetImage(tmpImg)
+                API.ACTIVE.slotCount.text = tmpCount
+                API.ACTIVE.slot.opacity = 1
+
+                tmpCount = nil
+                tmpImg = nil
+            end
         end
 
         Events.BroadcastToServer("inventory.moveitem", API.ACTIVE.inventory.id, inventory.id, API.ACTIVE.slotIndex, slotIndex)
@@ -1565,17 +1586,24 @@ return API
 
             -- Slot contains existing item
             else
-                local tmpImg = icon:GetImage()
-                local tmpCount = count.text
+                local item = inventory:GetItem(API.ACTIVE.slotIndex)
+                local toItem = inventory:GetItem(slotIndex)
 
-                icon:SetImage(API.ACTIVE.slotIcon:GetImage())
-                count.text = API.ACTIVE.slotCount.text
-                API.ACTIVE.slotIcon:SetImage(tmpImg)
-                API.ACTIVE.slotCount.text = tmpCount
-                API.ACTIVE.slot.opacity = 1
+                if item ~= nil and toItem ~= nil and item.itemAssetId == toItem.itemAssetId and toItem.count == toItem.maximumStackCount then
+                    API.ACTIVE.slot.opacity = 1
+                else
+                    local tmpImg = icon:GetImage()
+                    local tmpCount = count.text
 
-                tmpCount = nil
-                tmpImg = nil
+                    icon:SetImage(API.ACTIVE.slotIcon:GetImage())
+                    count.text = API.ACTIVE.slotCount.text
+                    API.ACTIVE.slotIcon:SetImage(tmpImg)
+                    API.ACTIVE.slotCount.text = tmpCount
+                    API.ACTIVE.slot.opacity = 1
+
+                    tmpCount = nil
+                    tmpImg = nil
+                end
             end
 
             Events.BroadcastToServer("inventory.moveitem", API.ACTIVE.inventory.id, inventory.id, API.ACTIVE.slotIndex, slotIndex)
@@ -1776,7 +1804,7 @@ local function ConnectSlotEvents()
         local button = slot:FindChildByName("Button")
         local icon = slot:FindChildByName("Icon")
 
-        if(button ~= nil and icon ~= nil and button.isInteractable) then
+        if button ~= nil and icon ~= nil and button.isInteractable then
             button.pressedEvent:Connect(API.OnSlotPressedEvent, inventory, slot, index)
         end
     end
@@ -1857,7 +1885,7 @@ ConnectSlotEvents()
             local button = slot:FindChildByName("Button")
             local icon = slot:FindChildByName("Icon")
 
-            if(button ~= nil and icon ~= nil and button.isInteractable) then
+            if button ~= nil and icon ~= nil and button.isInteractable then
                 button.pressedEvent:Connect(API.OnSlotPressedEvent, inventory, slot, index)
             end
         end
@@ -2194,7 +2222,7 @@ local function ConnectSlotEvents()
         local button = slot:FindChildByName("Button")
         local icon = slot:FindChildByName("Icon")
 
-        if(button ~= nil and icon ~= nil and button.isInteractable) then
+        if button ~= nil and icon ~= nil and button.isInteractable then
             button.pressedEvent:Connect(API.OnSlotPressedEvent, INVENTORY, slot, index)
         end
     end
@@ -2300,7 +2328,7 @@ ConnectSlotEvents()
             local button = slot:FindChildByName("Button")
             local icon = slot:FindChildByName("Icon")
 
-            if(button ~= nil and icon ~= nil and button.isInteractable) then
+            if button ~= nil and icon ~= nil and button.isInteractable then
                 button.pressedEvent:Connect(API.OnSlotPressedEvent, INVENTORY, slot, index)
             end
         end
@@ -2343,7 +2371,7 @@ Allowing the ability for the player to move items into other inventories is usef
 
 ## Discarding Items
 
-In this section, you will be adding an additional feature to the player's inventory that will give them the option to discard items they no longer wish to keep. It will allow them to move an item over the top of a special slot that will destroy the item.
+In this section, you will be creating a feature for the player's inventory that will give them the option to discard items they no longer wish to keep. It will allow them to move an item over the top of a special slot that will destroy the item.
 
 The UI for the special slot has already been created and is a part of the **Player Inventory** folder.
 
@@ -2630,17 +2658,24 @@ end
 
             -- Slot contains existing item
             else
-                local tmpImg = icon:GetImage()
-                local tmpCount = count.text
+                local item = inventory:GetItem(API.ACTIVE.slotIndex)
+                local toItem = inventory:GetItem(slotIndex)
 
-                icon:SetImage(API.ACTIVE.slotIcon:GetImage())
-                count.text = API.ACTIVE.slotCount.text
-                API.ACTIVE.slotIcon:SetImage(tmpImg)
-                API.ACTIVE.slotCount.text = tmpCount
-                API.ACTIVE.slot.opacity = 1
+                if item ~= nil and toItem ~= nil and item.itemAssetId == toItem.itemAssetId and toItem.count == toItem.maximumStackCount then
+                    API.ACTIVE.slot.opacity = 1
+                else
+                    local tmpImg = icon:GetImage()
+                    local tmpCount = count.text
 
-                tmpCount = nil
-                tmpImg = nil
+                    icon:SetImage(API.ACTIVE.slotIcon:GetImage())
+                    count.text = API.ACTIVE.slotCount.text
+                    API.ACTIVE.slotIcon:SetImage(tmpImg)
+                    API.ACTIVE.slotCount.text = tmpCount
+                    API.ACTIVE.slot.opacity = 1
+
+                    tmpCount = nil
+                    tmpImg = nil
+                end
             end
 
             Events.BroadcastToServer("inventory.moveitem", API.ACTIVE.inventory.id, inventory.id, API.ACTIVE.slotIndex, slotIndex)
