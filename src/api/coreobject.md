@@ -71,6 +71,7 @@ CoreObject is an Object placed in the scene hierarchy during edit mode or is par
 | `IsAncestorOf(CoreObject)` | `boolean` | Returns true if this CoreObject is a parent somewhere in the hierarchy above the given parameter object. False otherwise. | None |
 | `GetCustomProperties()` | `table` | Returns a table containing the names and values of all custom properties on a CoreObject. | None |
 | `GetCustomProperty(string propertyName)` | `value`, `boolean` | Gets data which has been added to an object using the custom property system. Returns the value, which can be an integer, number, boolean, string, Vector2, Vector3, Vector4, Rotation, Color, CoreObjectReference, a MUID string (for Asset References), NetReference, or nil if not found. Second return value is a boolean, true if found and false if not. | None |
+| `IsCustomPropertyDynamic(string propertyName)` | `boolean` | Returns `true` if the named custom property exists and is marked as dynamic. Otherwise, returns `false`. | None |
 | `SetCustomProperty(string propertyName, value)` | `boolean` | Sets the named custom property if it is marked as dynamic and the object it belongs to is server-side networked or in a client/server context. The value must match the existing type of the property, with the exception of CoreObjectReference properties (which accept a CoreObjectReference or a CoreObject) and Asset Reference properties (which accept a string MUID). AssetReferences, CoreObjectReferences, and NetReferences also accept `nil` to clear their value, although `GetCustomProperty()` will still return an unassigned CoreObjectReference or NetReference rather than `nil`. (See the `.isAssigned` property on those types.) | None |
 | `SetNetworkedCustomProperty(string propertyName, value)` | `boolean` | *This function is deprecated. Please use `CoreObject:SetCustomProperty()` instead.* Sets the named custom property if it is marked as replicated and the object it belongs to is server-side networked. The value must match the existing type of the property, with the exception of CoreObjectReference properties (which accept a CoreObjectReference or a CoreObject) and Asset Reference properties (which accept a string MUID). AssetReferences, CoreObjectReferences, and NetReferences also accept `nil` to clear their value, although `GetCustomProperty()` will still return an unassigned CoreObjectReference or NetReference rather than `nil`. (See the `.isAssigned` property on those types.) | <abbr title='This API is deprecated and will be removed in a future version'><strong>Deprecated</strong></abbr> |
 | `AttachToPlayer(Player, string socketName)` | `None` | Attaches a CoreObject to a Player at a specified socket. The CoreObject will be un-parented from its current hierarchy and its `parent` property will be nil. See [Socket Names](../api/animations.md#socket-names) for the list of possible values. | None |
@@ -740,6 +741,28 @@ script:SetCustomProperty("NetworkedCoreObjectReference", cube:GetReference())
 ```
 
 See also: [CoreObject.GetCustomProperty](coreobject.md) | [World.SpawnAsset](world.md) | [Event.Connect](event.md) | [CoreLua.print](coreluafunctions.md)
+
+---
+
+Example using:
+
+### `IsCustomPropertyDynamic`
+
+### `GetCustomProperties`
+
+In this example we look at all custom properties of a script. We then evaluate if each of them is dynamic. Only dynamic properties can be modified at runtime. To make a custom property dynamic first change the Core Object to networked, then right-click the property and change it to dynamic.
+
+```lua
+local allProperties = script:GetCustomProperties()
+
+for key,value in pairs(allProperties) do
+    if script:IsCustomPropertyDynamic(key) then
+        print("Custom property '" .. key .. "' is dynamic!")
+    else
+        print("Custom property '" .. key .. "' is not dynamic.")
+    end
+end
+```
 
 ---
 
